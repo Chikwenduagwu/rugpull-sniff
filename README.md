@@ -1,16 +1,16 @@
-# 🔍 Rug Pull Checker Agent
+#Rug Pull Checker Agent
 
-AI-powered Solana token analyzer that detects rug pulls and scams using SolSniffer API and FireworksAI.
+AI-powered Solana token analyzer that detects rug pulls and scams.
 
-## ✨ Features
+## Features
 
-- 🔍 **Instant Analysis** - Paste any Solana contract address
-- 🤖 **AI-Powered** - Comprehensive analysis using Llama 3.1
-- 💾 **Smart Caching** - Reduces API costs with 24-hour cache
-- 🎯 **Clear Verdicts** - LOW RISK / MODERATE RISK / HIGH RISK
+- **Instant Analysis** - Paste any Solana contract address
+- **AI-Powered** - Comprehensive analysis using Dobby(you can change in my .env)
+- **Smart Caching** - Reduces API costs with 24-hour cache
+- **Clear Verdicts** - LOW RISK / MODERATE RISK / HIGH RISK
 - ⚡ **Real-time Streaming** - Live AI responses
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Install Dependencies
 
@@ -30,10 +30,10 @@ Create a `.env` file:
 ```bash
 # FireworksAI (Required) - Get from https://fireworks.ai
 FIREWORKS_API_KEY=your_fireworks_key_here
-FIREWORKS_MODEL=accounts/fireworks/models/llama-v3p1-8b-instruct
+FIREWORKS_MODEL=use any model on fireworksAI but Dobby was used here, change in .env
 
 # SolSniffer (Optional - has default)
-SOLSNIFFER_API_KEY=to5p72yao22ajhlxiw6bvj8hogt896
+SOLSNIFFER_API_KEY=Get an API key from solsniffer 
 
 # Cache Settings
 SOLSNIFFER_ENABLE_CACHE=True
@@ -129,39 +129,25 @@ Check this CA: [paste address]
 ## 📁 Project Structure
 
 ```
-rug-pull-checker/
+rug-pull-agent/
 ├── src/
 │   └── rugpull_agent/
-│       ├── agent.py              # Main agent logic
-│       ├── solsniffer_service.py # API integration
-│       ├── llm_service.py        # AI analysis
-│       └── server.py             # FastAPI server
+│       ├── agent.py              
+│       ├── solsniffer_service.py 
+│       ├── llm_service.py        
+│       └── server.py             
 ├── config/
-│   ├── solsniffer_config.py      # API settings
-│   └── llm_config.py             # AI settings
+│   ├── solsniffer_config.py      
+│   └── llm_config.py             
 ├── utils/
-│   ├── cache.py                  # Caching system
-│   └── ca_parser.py              # Address parser
-├── .env                          # Your API keys
-├── main.py                       # Entry point
+│   ├── cache.py                  
+│   └── ca_parser.py              
+├── .env                          
+├── main.py                       
 └── requirements.txt
 ```
 
 ## 🔧 Configuration
-
-### Switch AI Models
-
-In `.env`:
-```bash
-# Fast & Free (default)
-FIREWORKS_MODEL=accounts/fireworks/models/llama-v3p1-8b-instruct
-
-# Better Quality
-FIREWORKS_MODEL=accounts/fireworks/models/llama-v3p1-70b-instruct
-
-# Best Quality
-FIREWORKS_MODEL=accounts/fireworks/models/llama-v3p1-405b-instruct
-```
 
 ### Adjust Cache Duration
 
@@ -171,36 +157,12 @@ SOLSNIFFER_CACHE_TTL_HOURS=24  # Cache for 24 hours
 SOLSNIFFER_ENABLE_CACHE=False  # Disable cache
 ```
 
-### CORS Settings
-
-Edit `main.py` if you need specific origins:
-```python
-server = RugPullServerWithCORS(
-    agent,
-    allow_origins=["http://localhost:3000"]  # Your frontend URL
-)
-```
-
 ## 🐛 Troubleshooting
 
 ### "FIREWORKS_API_KEY is not set"
 → Create `.env` file and add your API key from [fireworks.ai](https://fireworks.ai)
 
-### Token showing as "Unknown"
-```bash
-# Test the API directly
-python debug_api.py
-
-# Check logs for:
-# ✅ Successfully parsed JSON
-# 📊 Sending X bytes to AI
-```
-
-### CA not detected
-```bash
-# Test the parser
-python -c "from utils.ca_parser import CAParser; print(CAParser.extract_contract_address('your message'))"
-```
+ 
 
 ### Connection errors
 - Check internet connection
@@ -212,52 +174,14 @@ SOLSNIFFER_TIMEOUT=60
 
 ## 📊 Response Format
 
-The AI provides a comprehensive analysis:
-
-```markdown
-# 📊 Token Analysis: [Token Name] ([SYMBOL])
-
-**Contract:** `DezXAZ8z...`
-
-## 💰 Market Data
-- Price: $0.00000123
-- Market Cap: $1,234,567
-- Liquidity: $456,789
-- Supply: 1,000,000,000
-
-## 🔒 Security Analysis
-✅ Mint authority disabled
-✅ Freeze authority disabled
-⚠️ LP not burned
-⚠️ High holder concentration
-
-## 🎯 Risk Assessment
-**Risk Level:** 🟡 MODERATE RISK
-**Risk Score:** 45/100
-
-## 📋 Verdict
-[Detailed AI explanation and recommendations]
-```
-
-## 🧪 Testing
-
-### Check Health Endpoint
-```bash
-curl http://localhost:8000/health
-```
-
-### Test Contract Detection
-```bash
-python -c "from utils.ca_parser import CAParser; \
-print(CAParser.extract_contract_address('DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263'))"
-```
+![Screenshot_20251026-193731_1_074028](https://github.com/user-attachments/assets/5a0b7ec4-ef2d-42d7-a5f7-4c87c1d020fe)
 
 ### Clear Cache
 ```bash
 rm -rf .cache/
 ```
 
-## 🌟 Key Features
+## Key Features
 
 ### AI-First Architecture
 - Raw API data sent directly to AI
@@ -281,7 +205,7 @@ rm -rf .cache/
 
 - Python 3.9+
 - FireworksAI API key (required)
-- SolSniffer API key (optional - has default)
+- SolSniffer API key (required)
 - Internet connection
 
 ## 🔗 Links
@@ -302,4 +226,4 @@ Built with [Sentient Agent Framework](https://github.com/sentient-agi/Sentient-A
 
 **Ready to analyze tokens!** 🚀
 
-For issues: Create an issue on GitHub or contact support.
+For issues: Create an issue on GitHub or contact me on X https://x.com/agwuchikwendu.
