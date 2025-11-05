@@ -19,9 +19,12 @@ Your job is to:
 3. Identify red flags and green flags
 4. Provide a clear risk assessment (LOW RISK / MODERATE RISK / HIGH RISK)
 5. Give specific, actionable recommendations
+6. **ALWAYS show top holders with their individual addresses and percentages**
 
 Be thorough, accurate, and direct. If it's a scam, say so clearly.
-Format your response with markdown for readability."""
+Format your response with markdown for readability.
+
+CRITICAL: When showing top holders, you MUST list each holder's address individually with their percentage, not just aggregate statistics."""
     
     def __init__(self):
         self.config = LLMConfig()
@@ -116,42 +119,116 @@ Format your response with markdown for readability."""
 {json_data}
 ```
 
-**YOUR TASK:**
-1. **Extract Token Information:**
-   - Token name and symbol
-   - Contract address
-   - Price (format small numbers properly)
-   - Market cap
-   - Liquidity
-   - Supply/circulation
-   - Holder count
-   - Any other relevant metrics you find
+**YOUR TASK - FOLLOW THIS EXACT FORMAT:**
 
-2. **Security Analysis:**
-   - Check if mint authority is renounced/disabled
-   - Check if freeze authority is renounced/disabled
-   - Check if liquidity pool is burned/locked
-   - Analyze holder distribution (top holders percentage)
-   - Check for any other security flags in the data
+## 🎯 RISK VERDICT (Show this first)
+- **Risk Level:** 🟢 LOW RISK / 🟡 MODERATE RISK / 🔴 HIGH RISK
+- **Risk Score:** X/100
+- **Recommendation:** Buy / Be Cautious / Avoid
 
-3. **Risk Assessment:**
-   - Calculate an overall risk score (0-100)
-   - Assign a risk level: 🟢 LOW RISK / 🟡 MODERATE RISK / 🔴 HIGH RISK
-   - List specific red flags (if any)
-   - List specific green flags (if any)
+---
 
-4. **Clear Verdict:**
-   - Is this token SAFE, MODERATE RISK, or HIGH RISK?
-   - Should investors buy, be cautious, or avoid?
-   - Specific reasons for your verdict
+## 📊 TOKEN INFORMATION
+- **Name:** [Token Name]
+- **Symbol:** [Token Symbol]
+- **Contract:** `{contract_address}`
+- **Price:** $X.XX (format properly, use scientific notation if needed)
+- **Market Cap:** $X,XXX,XXX
+- **Total Supply:** X,XXX,XXX
+- **Circulating Supply:** X,XXX,XXX
+- **Holder Count:** XXX
+- **Liquidity:** $X,XXX,XXX
+- **Token Age:** X days/months
 
-5. **Format Requirements:**
-   - Use markdown formatting (headers, bold, lists, tables)
-   - Make it visually clear and easy to scan
-   - Include emojis for visual appeal
-   - Put the most important info first
+---
 
-**IMPORTANT:** Extract ALL relevant information from the JSON data above. Don't skip any important fields. If data is nested (like inside "data", "tokenInfo", "securityInfo", etc.), make sure to look inside those objects."""
+## 👥 TOP HOLDERS (!)
+
+**⚠️ lists ⚠️**
+
+Search the JSON data for fields like:
+- `holders`, `topHolders`, `top_holders`
+- `holderInfo`, `holder_info`
+- Any array containing holder/wallet data
+
+Then create a table like this:
+
+| Rank | Address | Holdings | % of Supply |
+|------|---------|----------|-------------|
+| 1 | `abc123...xyz789` | 1,234,567 | 12.34% |
+| 2 | `def456...uvw012` | 987,654 | 9.87% |
+| 3 | `ghi789...rst345` | 765,432 | 7.65% |
+| ... | ... | ... | ... |
+
+**Concentration Analysis:**
+- Top 5 holders own: XX.XX%
+- Top 10 holders own: XX.XX%
+- Top 20 holders own: XX.XX%
+- **Risk Assessment:** [Is concentration too high? Is it distributed?]
+
+**IF YOU CANNOT FIND HOLDER DATA IN THE JSON:**
+State clearly: "⚠️ Holder address data not available in API response. Only showing aggregate statistics."
+
+---
+
+## 🔒 SECURITY ANALYSIS
+
+### Mint Authority
+- **Status:** ✅ Renounced / ❌ Active
+- **Address:** [if available]
+- **Risk:** [Explain the risk]
+
+### Freeze Authority
+- **Status:** ✅ Renounced / ❌ Active
+- **Address:** [if available]
+- **Risk:** [Explain the risk]
+
+### Liquidity Pool
+- **Status:** ✅ Burned / 🔒 Locked / ❌ Unlocked
+- **LP Tokens Burned:** XX%
+- **LP Tokens Locked:** XX%
+- **Risk:** [Explain the risk]
+
+### Other Security Flags
+- List any other security-related findings from the data
+
+---
+
+## 🚩 RED FLAGS & 🟢 GREEN FLAGS
+
+### 🚩 Red Flags:
+- [List specific concerns]
+- [Be specific about what makes this risky]
+
+### 🟢 Green Flags:
+- [List positive indicators]
+- [Be specific about what makes this safe]
+
+---
+
+## 💡 FINAL VERDICT
+
+**Overall Assessment:** [Detailed explanation]
+
+**Should you invest?**
+- [Clear yes/no/maybe with reasoning]
+
+**Specific Recommendations:**
+1. [Action item 1]
+2. [Action item 2]
+3. [Action item 3]
+
+---
+
+**CRITICAL REQUIREMENTS:**
+1. ⚠️ **YOU MUST SHOW THE TOP HOLDERS TABLE** - Do not just say "Top 10 hold X%"
+2. Extract holder addresses from fields like: `holders`, `topHolders`, `holderInfo`, `top_holders`, or any array with wallet/address data
+3. If the data contains holder addresses, DISPLAY THEM in a table
+4. Abbreviate long addresses: `abc123...xyz789`
+5. Look inside ALL nested objects in the JSON (data.holders, data.tokenInfo.holders, etc.)
+6. If you truly cannot find individual holder addresses, say so explicitly
+
+**REMEMBER:** The goal is to show DETAILED holder breakdown, not just aggregate percentages!"""
 
         
         if user_question:
@@ -159,6 +236,6 @@ Format your response with markdown for readability."""
 
 {base_prompt}
 
-Also answer the user's specific question in your response."""
+Make sure to address the user's specific question. If they asked about "top holders", prioritize showing the detailed holder breakdown table."""
         
         return base_prompt
