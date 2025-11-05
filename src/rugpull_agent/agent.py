@@ -38,11 +38,9 @@ class RugPullAgent(AbstractAgent):
         
         logger.info(f"🔍 Initializing {name}...")
         
-       
         self.solsniffer_service = SolSnifferService()
         self.llm_service = LLMService()
         self.ca_parser = CAParser()
-        
         
         if SolSnifferConfig.ENABLE_CACHE:
             self.cache_manager = CacheManager(
@@ -81,10 +79,8 @@ class RugPullAgent(AbstractAgent):
             user_prompt = query.prompt.strip()
             logger.info(f"📨 Received query: {user_prompt[:100]}...")
             
-            
             contract_address = self.ca_parser.extract_contract_address(user_prompt)
             logger.info(f"🔍 CA Parser result: {contract_address}")
-            
             
             if contract_address:
                 logger.info(f"✅ Valid CA detected: {contract_address}")
@@ -95,12 +91,10 @@ class RugPullAgent(AbstractAgent):
                 )
                 return
             
-           
             if self._is_greeting(user_prompt):
                 logger.info("👋 Greeting detected")
                 await self._handle_greeting(response_handler)
                 return
-            
             
             logger.info("💬 Normal chat conversation")
             await self._handle_normal_chat(user_prompt, response_handler)
@@ -122,13 +116,11 @@ class RugPullAgent(AbstractAgent):
         """Process token analysis - AI handles everything."""
         
         try:
-            
             cache_key = f"token_analysis_{contract_address}"
             if self.cache_manager:
                 cached_result = await self.cache_manager.get(cache_key)
                 if cached_result:
                     logger.info(f"💾 Cache hit for: {contract_address}")
-                    
                     
                     await response_handler.emit_text_block(
                         "AI_ANALYSIS",
@@ -138,16 +130,13 @@ class RugPullAgent(AbstractAgent):
                     await response_handler.complete()
                     return
             
-            
             logger.info(f"🔍 Fetching analysis from SolSniffer API...")
             await response_handler.emit_text_block(
                 "STATUS",
                 f"🔍 **Analyzing Token**\n\n`{contract_address[:8]}...{contract_address[-8:]}`\n\nFetching data..."
             )
             
-            
             analysis_data = await self.solsniffer_service.analyze_token(contract_address)
-            
             
             if not analysis_data or "error" in analysis_data:
                 error_msg = analysis_data.get("message", "Failed to analyze token") if analysis_data else "Failed to analyze token"
@@ -162,12 +151,10 @@ class RugPullAgent(AbstractAgent):
             logger.info(f"✅ Successfully fetched analysis data")
             logger.info(f"📊 Data keys: {list(analysis_data.keys())}")
             
-            
             await response_handler.emit_text_block(
                 "STATUS",
                 "🤖 **AI Processing**\n\nAnalyzing token data with AI..."
             )
-            
             
             ai_response = await self.llm_service.analyze_token(
                 contract_address=contract_address,
@@ -175,12 +162,10 @@ class RugPullAgent(AbstractAgent):
                 user_question=user_prompt
             )
             
-            
             await response_handler.emit_text_block(
                 "AI_ANALYSIS",
                 ai_response
             )
-            
             
             if self.cache_manager:
                 cache_data = {
@@ -243,29 +228,44 @@ Simply paste a Solana contract address (CA) and I'll analyze it!
         await response_handler.complete()
     
     async def _handle_normal_chat(self, user_prompt: str, response_handler: ResponseHandler):
-        """Handle normal conversation without CA."""
+        """Handle normal conversation without CA - Use LLM for intelligent responses."""
         
         try:
-            prompt = f"""The user says: "{user_prompt}"
+            
+            system_prompt = """You are an expert Solana token security analyst specializing in rug pull detection and crypto scams.
 
-You are a Solana token rug pull checker assistant. The user is asking a general question that doesn't include a contract address.
+Your expertise includes:
+- Identifying red flags in tokenomics (mint authority, freeze authority, liquidity locks)
+- Explaining holder distribution and concentration risks
+- Understanding liquidity pool mechanics and burning
+- Recognizing common scam patterns in crypto projects
+- Educating users on due diligence and safety practices
 
-Please respond helpfully about:
-- What makes a token a rug pull
-- How to identify scam tokens
-- General crypto safety tips
-- How to use this tool (just paste a Solana contract address)
+Provide detailed, accurate, and educational responses about:
+- What makes a token a rug pull or scam
+- How to identify suspicious tokens
+- Security best practices for crypto investors
+- How to read token metrics and on-chain data
+- Common rug pull tactics and warning signs
 
-Keep your response concise, helpful, and friendly."""
+Be conversational, knowledgeable, and helpful. Use examples when appropriate. 
+If the user asks how to use this tool, explain they just need to paste a Solana contract address."""
+
+            
+            prompt = f"""User question: "{user_prompt}"
+
+Provide a detailed, helpful response about rug pulls, token security, or crypto safety based on the user's question. 
+Be specific, educational, and conversational. If relevant, explain concepts with examples."""
 
             payload = {
                 "model": LLMConfig.MODEL,
                 "messages": [
-                    {"role": "system", "content": "You are a helpful crypto safety assistant specializing in Solana tokens."},
+                    {"role": "system", "content": system_prompt},
                     {"role": "user", "content": prompt}
                 ],
-                "max_tokens": 512,
+                "max_tokens": 1024,
                 "temperature": 0.7,
+                "top_p": 0.9,
                 "stream": False
             }
             
@@ -286,21 +286,53 @@ Keep your response concise, helpful, and friendly."""
                             "CHAT_RESPONSE",
                             content
                         )
+                        logger.info("✅ LLM chat response generated successfully")
                     else:
+                        error_text = await response.text()
+                        logger.error(f"❌ LLM API error: {response.status} - {error_text}")
+                        
+                        
+                        fallback = """I'm a Solana token rug pull analyzer! 🔍
+
+I specialize in detecting scams and risky tokens by analyzing:
+• **Mint & Freeze Authority** - Whether creators can mint unlimited tokens or freeze wallets
+• **Liquidity Locks** - If liquidity pools are burned or locked
+• **Holder Distribution** - How concentrated token ownership is
+• **On-chain Security** - Various red flags and green flags
+
+**To analyze a token:** Just paste its Solana contract address!
+
+**Example:** `DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263`
+
+Got questions about rug pulls or token safety? Feel free to ask!"""
                         
                         await response_handler.emit_text_block(
                             "CHAT_RESPONSE",
-                            "I'm here to help analyze Solana tokens for rug pull risks! 🔍\n\n"
-                            "To get started, simply paste a Solana contract address.\n\n"
-                            "**Example:** `DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263`"
+                            fallback
                         )
+                        
         except Exception as e:
-            logger.error(f"Error in normal chat: {str(e)}")
+            logger.error(f"❌ Error in normal chat: {str(e)}", exc_info=True)
+            
+            
+            fallback = """I'm here to help analyze Solana tokens for rug pull risks! 🔍
+
+**What I do:**
+- Detect mint/freeze authorities
+- Check liquidity locks and burns
+- Analyze holder distribution
+- Identify red flags and scams
+
+**How to use me:**
+Simply paste a Solana contract address and I'll give you a detailed analysis!
+
+**Example:** `7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU`
+
+Ask me anything about rug pulls or token security!"""
+            
             await response_handler.emit_text_block(
                 "CHAT_RESPONSE",
-                "I'm a rug pull checker for Solana tokens! 🔍\n\n"
-                "Just paste a contract address and I'll analyze it.\n\n"
-                "**Example:** `DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263`"
+                fallback
             )
         
         await response_handler.complete()
