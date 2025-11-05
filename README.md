@@ -32,7 +32,7 @@ Create a `.env` file:
 FIREWORKS_API_KEY=your_fireworks_key_here
 FIREWORKS_MODEL=use any model on fireworksAI but Dobby was used here, change in .env
 
-# SolSniffer (Optional - has default)
+# SolSniffer (Required)
 SOLSNIFFER_API_KEY=Get an API key from solsniffer 
 
 # Cache Settings
